@@ -28,7 +28,7 @@ package org.wltea.analyzer.dic;
 /**
  * 表示一次词典匹配的命中
  */
-public class Hit {
+public class Hit { // NOTE:htt, 记录当前查找是否查找到
 	//Hit不匹配
 	private static final int UNMATCH = 0x00000000;
 	//Hit完全匹配
@@ -45,11 +45,11 @@ public class Hit {
 	/*
 	 * 词段开始位置
 	 */
-	private int begin;
+	private int begin; // NOTE:htt, 记录词开始匹配位置
 	/*
 	 * 词段的结束位置
 	 */
-	private int end;
+	private int end; // NOTE:htt, 记录词匹配结尾的位置
 	
 	
 	/**
@@ -61,7 +61,7 @@ public class Hit {
 	/**
 	 * 
 	 */
-	public void setMatch() {
+	public void setMatch() { // NOTE:htt, 设置状态为匹配
 		this.hitState = this.hitState | MATCH;
 	}
 
@@ -74,7 +74,7 @@ public class Hit {
 	/**
 	 * 
 	 */
-	public void setPrefix() {
+	public void setPrefix() { // NOTE:htt, 设置为前缀状态
 		this.hitState = this.hitState | PREFIX;
 	}
 	/**

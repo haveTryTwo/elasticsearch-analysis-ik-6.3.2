@@ -32,8 +32,8 @@ public class AnalysisIkPlugin extends Plugin implements AnalysisPlugin {
     public Map<String, AnalysisModule.AnalysisProvider<AnalyzerProvider<? extends Analyzer>>> getAnalyzers() {
         Map<String, AnalysisModule.AnalysisProvider<AnalyzerProvider<? extends Analyzer>>> extra = new HashMap<>();
 
-        extra.put("ik_smart", IkAnalyzerProvider::getIkSmartAnalyzerProvider);
-        extra.put("ik_max_word", IkAnalyzerProvider::getIkAnalyzerProvider);
+        extra.put("ik_smart", IkAnalyzerProvider::getIkSmartAnalyzerProvider); // NOTE:htt, 采用精简方式分词
+        extra.put("ik_max_word", IkAnalyzerProvider::getIkAnalyzerProvider); // NOTE:htt, 采用最多词方式进行分词
 
         return extra;
     }

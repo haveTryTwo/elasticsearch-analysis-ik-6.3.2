@@ -19,14 +19,16 @@ public class Configuration {
 	private Settings settings;
 
 	//是否启用智能分词
-	private  boolean useSmart;
+	private  boolean useSmart; // NOTE:htt, 是否启用smart机制，默认是不启用
 
 	//是否启用远程词典加载
-	private boolean enableRemoteDict=false;
+	private boolean enableRemoteDict=false; // NOTE:htt, 默认启用远程词典选项为true
 
 	//是否启用小写处理
 	private boolean enableLowercase=true;
 
+	//是否开启自动检查词库变更
+	private boolean enableAutoCheckDict = true;
 
 	@Inject
 	public Configuration(Environment env,Settings settings) {
@@ -36,6 +38,7 @@ public class Configuration {
 		this.useSmart = settings.get("use_smart", "false").equals("true");
 		this.enableLowercase = settings.get("enable_lowercase", "true").equals("true");
 		this.enableRemoteDict = settings.get("enable_remote_dict", "true").equals("true");
+		this.enableAutoCheckDict = settings.get("enable_autocheck_dict", "true").equals("true");
 
 		Dictionary.initial(this);
 
@@ -71,5 +74,9 @@ public class Configuration {
 
 	public boolean isEnableLowercase() {
 		return enableLowercase;
+	}
+
+	public boolean isEnableAutoCheckDict() {
+		return enableAutoCheckDict;
 	}
 }

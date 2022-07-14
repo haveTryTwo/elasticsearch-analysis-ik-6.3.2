@@ -18,11 +18,11 @@ public class IkAnalyzerProvider extends AbstractIndexAnalyzerProvider<IKAnalyzer
     }
 
     public static IkAnalyzerProvider getIkSmartAnalyzerProvider(IndexSettings indexSettings, Environment env, String name, Settings settings) {
-        return new IkAnalyzerProvider(indexSettings,env,name,settings,true);
+        return new IkAnalyzerProvider(indexSettings,env,name,settings,true); // NOTE:htt, 采用精简方式分词
     }
 
     public static IkAnalyzerProvider getIkAnalyzerProvider(IndexSettings indexSettings, Environment env, String name, Settings settings) {
-        return new IkAnalyzerProvider(indexSettings,env,name,settings,false);
+        return new IkAnalyzerProvider(indexSettings,env,name,settings,false); // NOTE:htt, 采用最大词方式分词
     }
 
     @Override public IKAnalyzer get() {

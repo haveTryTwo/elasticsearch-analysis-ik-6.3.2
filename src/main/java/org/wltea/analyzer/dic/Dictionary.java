@@ -31,11 +31,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.LinkOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.Files;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.FileTime;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.*;
@@ -69,7 +71,7 @@ public class Dictionary {
 	 */
 	private static Dictionary singleton;
 
-	private DictSegment _MainDict;
+	private DictSegment _MainDict; // NOTE:htt, 主词典
 
 	private DictSegment _QuantifierDict;
 
@@ -96,23 +98,32 @@ public class Dictionary {
 	private final static  String REMOTE_EXT_DICT = "remote_ext_dict";
 	private final static  String EXT_STOP = "ext_stopwords";
 	private final static  String REMOTE_EXT_STOP = "remote_ext_stopwords";
+	private final static  String EXT_DICT_FOLDER = "ext-dict";
+
+	private static FileTime extDictLastModifiedTime;
+	private static FileTime extDictConfigLastModifiedTime;
 
 	private Path conf_dir;
 	private Properties props;
 
-	private Dictionary(Configuration cfg) {
+	private Dictionary(Configuration cfg) { // NOTE:htt, 加载 ${real_ik_conf}/IKAnalyzer.cfg.xml 文件，以便获取 ext 词典等信息
 		this.configuration = cfg;
 		this.props = new Properties();
-		this.conf_dir = cfg.getEnvironment().configFile().resolve(AnalysisIkPlugin.PLUGIN_NAME);
+		this.conf_dir = cfg.getEnvironment().configFile().resolve(AnalysisIkPlugin.PLUGIN_NAME); // NOTE:htt, 默认先找 ${es_conf}/analysis-ik 作为配置路径
+		this.props = loadProperties();
+	}
+
+	private Properties loadProperties() {
 		Path configFile = conf_dir.resolve(FILE_NAME);
 
+		Properties tmpProps = new Properties();
 		InputStream input = null;
 		try {
 			logger.info("try load config from {}", configFile);
 			input = new FileInputStream(configFile.toFile());
 		} catch (FileNotFoundException e) {
-			conf_dir = cfg.getConfigInPluginDir();
-			configFile = conf_dir.resolve(FILE_NAME);
+			conf_dir = configuration.getConfigInPluginDir(); // NOTE:htt, 如果原有路径没有找到，再查找 ${ik_path}/config 路径
+			configFile = conf_dir.resolve(FILE_NAME); // NOTE:htt, 加载 ${real_ik_conf}/IKAnalyzer.cfg.xml 文件
 			try {
 				logger.info("try load config from {}", configFile);
 				input = new FileInputStream(configFile.toFile());
@@ -123,11 +134,12 @@ public class Dictionary {
 		}
 		if (input != null) {
 			try {
-				props.loadFromXML(input);
+				tmpProps.loadFromXML(input); // NOTE:htt, 按 xml 规则加载 IKAnalyzer.cfg.xml
 			} catch (IOException e) {
 				logger.error("ik-analyzer", e);
 			}
 		}
+		return tmpProps;
 	}
 
 	private String getProperty(String key){
@@ -166,6 +178,17 @@ public class Dictionary {
 						}
 					}
 
+					if (cfg.isEnableAutoCheckDict()) {
+						// 监控配置文件及自定义词库
+						pool.scheduleAtFixedRate(new Runnable(){
+							@Override
+							public void run() {
+								Dictionary.getSingleton().checkExtDict();
+							}
+
+						}, 10, 30, TimeUnit.SECONDS);
+					}
+
 				}
 			}
 		}
@@ -189,15 +212,15 @@ public class Dictionary {
 			});
 		} catch (IOException e) {
 			logger.error("[Ext Loading] listing files", e);
-		} else {
+		} else { // TODO:htt, 代码路径需要调整
 			logger.warn("[Ext Loading] file not found: " + path);
 		}
 	}
 
-	private void loadDictFile(DictSegment dict, Path file, boolean critical, String name) {
+	private void loadDictFile(DictSegment dict, Path file, boolean critical, String name) { // NOTE:htt, 从文件加载内容构建词典
 		try (InputStream is = new FileInputStream(file.toFile())) {
 			BufferedReader br = new BufferedReader(
-					new InputStreamReader(is, "UTF-8"), 512);
+					new InputStreamReader(is, "UTF-8"), 512); // NOTE:htt, 需要为UTF-8格式
 			String word = br.readLine();
 			if (word != null) {
 				if (word.startsWith("\uFEFF"))
@@ -205,7 +228,7 @@ public class Dictionary {
 				for (; word != null; word = br.readLine()) {
 					word = word.trim();
 					if (word.isEmpty()) continue;
-					dict.fillSegment(word.toCharArray());
+					dict.fillSegment(word.toCharArray()); // NOTE:htt, 添加填充的词
 				}
 			}
 		} catch (FileNotFoundException e) {
@@ -221,7 +244,7 @@ public class Dictionary {
 		String extDictCfg = getProperty(EXT_DICT);
 		if (extDictCfg != null) {
 
-			String[] filePaths = extDictCfg.split(";");
+			String[] filePaths = extDictCfg.split(";"); // NOTE:htt, ext_dict中的拓展文件名按 ; 分割，如a.dic;b.dic
 			for (String filePath : filePaths) {
 				if (filePath != null && !"".equals(filePath.trim())) {
 					Path file = PathUtils.get(getDictRoot(), filePath.trim());
@@ -382,11 +405,11 @@ public class Dictionary {
 	 */
 	private void loadMainDict() {
 		// 建立一个主词典实例
-		_MainDict = new DictSegment((char) 0);
+		_MainDict = new DictSegment((char) 0); // NOTE:htt, main dictionary的根节点
 
 		// 读取主词典文件
-		Path file = PathUtils.get(getDictRoot(), Dictionary.PATH_DIC_MAIN);
-		loadDictFile(_MainDict, file, false, "Main Dict");
+		Path file = PathUtils.get(getDictRoot(), Dictionary.PATH_DIC_MAIN); // NOTE:htt, 加载 ${real_ik_conf}/main.dic 主词典
+		loadDictFile(_MainDict, file, false, "Main Dict"); // NOTE:htt, 从main.dic文件加载内容构建词典
 		// 加载扩展词典
 		this.loadExtDict();
 		// 加载远程自定义词库
@@ -573,4 +596,42 @@ public class Dictionary {
 		logger.info("重新加载词典完毕...");
 	}
 
+
+	public void checkExtDict() {
+		try {
+			Path extDictPath = conf_dir.resolve(EXT_DICT_FOLDER);
+			if (!Files.exists(extDictPath, LinkOption.NOFOLLOW_LINKS)) {
+				return;
+			}
+
+			FileTime extDictCurTime = Files.getLastModifiedTime(extDictPath, LinkOption.NOFOLLOW_LINKS);
+			if (!extDictCurTime.equals(extDictLastModifiedTime)) {
+				extDictLastModifiedTime = extDictCurTime;
+				extDictConfigLastModifiedTime = Files.getLastModifiedTime(conf_dir.resolve(FILE_NAME), LinkOption.NOFOLLOW_LINKS);
+				logger.info("dict file changed, reload.");
+				this.reLoadMainDict();
+				return;
+			}
+
+			FileTime extDictConfigCurTime = Files.getLastModifiedTime(conf_dir.resolve(FILE_NAME), LinkOption.NOFOLLOW_LINKS);
+			if (!extDictConfigCurTime.equals(extDictConfigLastModifiedTime)) {
+				extDictConfigLastModifiedTime = extDictConfigCurTime;
+				Properties props = this.loadProperties();
+				String newDict = new StringBuilder(props.getProperty(EXT_DICT)).append(props.getProperty(EXT_STOP))
+						.append(props.getProperty(REMOTE_EXT_DICT)).append(props.getProperty(REMOTE_EXT_STOP)).toString();
+				String curDict = new StringBuilder(this.getProperty(EXT_DICT)).append(this.getProperty(EXT_STOP))
+						.append(this.getProperty(REMOTE_EXT_DICT)).append(this.getProperty(REMOTE_EXT_STOP)).toString();
+
+				if (!newDict.equals(curDict)) {
+					this.props = props;
+					logger.info("dict conf changed, reload. curDict[{}], newDict[{}]", curDict, newDict);
+					this.reLoadMainDict();
+					return;
+				}
+			}
+
+		} catch (Exception e) {
+			logger.error("check ext dict error", e);
+		}
+	}
 }

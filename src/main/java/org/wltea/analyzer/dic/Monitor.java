@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.SpecialPermission;
 import org.wltea.analyzer.help.ESPluginLoggerFactory;
 
-public class Monitor implements Runnable {
+public class Monitor implements Runnable { // NOTE:htt, 监控远程词库是否发送变化，如果变化，则重新加载主词库、用户扩展词库、 远程词库 和 停用词
 
 	private static final Logger logger = ESPluginLoggerFactory.getLogger(Monitor.class.getName());
 
@@ -30,7 +30,7 @@ public class Monitor implements Runnable {
 	/*
 	 * 请求地址
 	 */
-	private String location;
+	private String location; // NOTE:htt, 远程连接地址
 
 	public Monitor(String location) {
 		this.location = location;
@@ -38,7 +38,7 @@ public class Monitor implements Runnable {
 		this.eTags = null;
 	}
 
-	public void run() {
+	public void run() { // NOTE:htt, 重新加载主词库、用户扩展词库、 远程词库 和 停用词
 		SpecialPermission.check();
 		AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
 			this.runUnprivileged();
@@ -55,7 +55,7 @@ public class Monitor implements Runnable {
 	 *  ⑤休眠1min，返回第①步
 	 */
 
-	public void runUnprivileged() {
+	public void runUnprivileged() { // NOTE:htt, 重新加载主词库、用户扩展词库、 远程词库 和 停用词
 
 		//超时设置
 		RequestConfig rc = RequestConfig.custom().setConnectionRequestTimeout(10*1000)
@@ -84,9 +84,9 @@ public class Monitor implements Runnable {
 						||((response.getLastHeader("ETag")!=null) && !response.getLastHeader("ETag").getValue().equalsIgnoreCase(eTags))) {
 
 					// 远程词库有更新,需要重新加载词典，并修改last_modified,eTags
-					Dictionary.getSingleton().reLoadMainDict();
-					last_modified = response.getLastHeader("Last-Modified")==null?null:response.getLastHeader("Last-Modified").getValue();
-					eTags = response.getLastHeader("ETag")==null?null:response.getLastHeader("ETag").getValue();
+					Dictionary.getSingleton().reLoadMainDict(); // NOTE:htt, 如果远程词库有更新，则重新加载主词库、用户扩展词库、 远程词库 和 停用词
+					last_modified = response.getLastHeader("Last-Modified")==null?null:response.getLastHeader("Last-Modified").getValue(); // NOTE:htt, 更新 last modified 时间
+					eTags = response.getLastHeader("ETag")==null?null:response.getLastHeader("ETag").getValue(); // NOTE:htt, 更新 ETag
 				}
 			}else if (response.getStatusLine().getStatusCode()==304) {
 				//没有修改，不做操作

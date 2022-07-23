@@ -27,11 +27,11 @@ package org.wltea.analyzer.core;
 /**
  * IK分词器专用的Lexem快速排序集合
  */
-class QuickSortSet {
+class QuickSortSet { // NOTE:htt, 词元链表
 	//链表头
-	private Cell head;
+	private Cell head; // NOTE:htt, 头链表，正序排序
 	//链表尾
-	private Cell tail;
+	private Cell tail; // NOTE:htt, 尾链表，正序排序
 	//链表的实际大小
 	private int size;
 	
@@ -43,8 +43,8 @@ class QuickSortSet {
 	 * 向链表集合添加词元
 	 * @param lexeme
 	 */
-	boolean addLexeme(Lexeme lexeme){
-		Cell newCell = new Cell(lexeme); 
+	boolean addLexeme(Lexeme lexeme){ // NOTE:htt, 增加词元到链表中
+		Cell newCell = new Cell(lexeme); // NOTE:htt, 单元链表
 		if(this.size == 0){
 			this.head = newCell;
 			this.tail = newCell;
@@ -52,17 +52,17 @@ class QuickSortSet {
 			return true;
 			
 		}else{
-			if(this.tail.compareTo(newCell) == 0){//词元与尾部词元相同，不放入集合
+			if(this.tail.compareTo(newCell) == 0){//词元与尾部词元相同，不放入集合 // NOTE:htt, 相同词元不追加
 				return false;
 				
-			}else if(this.tail.compareTo(newCell) < 0){//词元接入链表尾部
+			}else if(this.tail.compareTo(newCell) < 0){//词元接入链表尾部 // NOTE:htt, 正序排序，追加末尾
 				this.tail.next = newCell;
 				newCell.prev = this.tail;
 				this.tail = newCell;
 				this.size++;
 				return true;
 				
-			}else if(this.head.compareTo(newCell) > 0){//词元接入链表头部
+			}else if(this.head.compareTo(newCell) > 0){//词元接入链表头部 // NOTE:htt, 正序排序，追加头部
 				this.head.prev = newCell;
 				newCell.next = this.head;
 				this.head = newCell;
@@ -78,7 +78,7 @@ class QuickSortSet {
 				if(index.compareTo(newCell) == 0){//词元与集合中的词元重复，不放入集合
 					return false;
 					
-				}else if(index.compareTo(newCell) < 0){//词元插入链表中的某个位置
+				}else if(index.compareTo(newCell) < 0){//词元插入链表中的某个位置 // NOTE:htt, 插入合适位置
 					newCell.prev = index;
 					newCell.next = index.next;
 					index.next.prev = newCell;
@@ -106,7 +106,7 @@ class QuickSortSet {
 	 * 取出链表集合的第一个元素
 	 * @return Lexeme
 	 */
-	Lexeme pollFirst(){
+	Lexeme pollFirst(){ // NOTE:htt, 头部取出一个词元
 		if(this.size == 1){
 			Lexeme first = this.head.lexeme;
 			this.head = null;
@@ -138,7 +138,7 @@ class QuickSortSet {
 	 * 取出链表集合的最后一个元素
 	 * @return Lexeme
 	 */
-	Lexeme pollLast(){
+	Lexeme pollLast(){ // NOTE:htt, 从尾部取出一个词元
 		if(this.size == 1){
 			Lexeme last = this.head.lexeme;
 			this.head = null;
@@ -208,10 +208,10 @@ class QuickSortSet {
 	 * QuickSortSet集合单元
 	 * 
 	 */
-	class Cell implements Comparable<Cell>{
+	class Cell implements Comparable<Cell>{ // NOTE:htt, 单元链表
 		private Cell prev;
 		private Cell next;
-		private Lexeme lexeme;
+		private Lexeme lexeme; // NOTE:htt, ik词元，包括{offset, begin, length, type}
 		
 		Cell(Lexeme lexeme){
 			if(lexeme == null){

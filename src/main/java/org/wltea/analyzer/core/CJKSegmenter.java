@@ -35,7 +35,7 @@ import java.util.List;
 /**
  *  中文-日韩文子分词器
  */
-class CJKSegmenter implements ISegmenter {
+class CJKSegmenter implements ISegmenter { // NOTE:htt, 中日韩分词
 	
 	//子分词器标签
 	static final String SEGMENTER_NAME = "CJK_SEGMENTER";
@@ -62,7 +62,7 @@ class CJKSegmenter implements ISegmenter {
 					if(hit.isMatch()){
 						//输出当前的词
 						Lexeme newLexeme = new Lexeme(context.getBufferOffset() , hit.getBegin() , context.getCursor() - hit.getBegin() + 1 , Lexeme.TYPE_CNWORD);
-						context.addLexeme(newLexeme);
+						context.addLexeme(newLexeme); // NOTE:htt, 添加中文分词
 						
 						if(!hit.isPrefix()){//不是词前缀，hit不需要继续匹配，移除
 							this.tmpHits.remove(hit);
@@ -77,14 +77,14 @@ class CJKSegmenter implements ISegmenter {
 			
 			//*********************************
 			//再对当前指针位置的字符进行单字匹配
-			Hit singleCharHit = Dictionary.getSingleton().matchInMainDict(context.getSegmentBuff(), context.getCursor(), 1);
+			Hit singleCharHit = Dictionary.getSingleton().matchInMainDict(context.getSegmentBuff(), context.getCursor(), 1); // NOTE:htt, 判断是否主词库
 			if(singleCharHit.isMatch()){//首字成词
 				//输出当前的词
-				Lexeme newLexeme = new Lexeme(context.getBufferOffset() , context.getCursor() , 1 , Lexeme.TYPE_CNWORD);
-				context.addLexeme(newLexeme);
+				Lexeme newLexeme = new Lexeme(context.getBufferOffset() , context.getCursor() , 1 , Lexeme.TYPE_CNWORD); // NOTE:htt, 本次满足的词元
+				context.addLexeme(newLexeme); // NOTE:htt, 添加中文分词
 
 				//同时也是词前缀
-				if(singleCharHit.isPrefix()){
+				if(singleCharHit.isPrefix()){ // NOTE:htt, 如果是前缀，则从t添加到mpHits
 					//前缀匹配则放入hit列表
 					this.tmpHits.add(singleCharHit);
 				}
@@ -101,7 +101,7 @@ class CJKSegmenter implements ISegmenter {
 		}
 		
 		//判断缓冲区是否已经读完
-		if(context.isBufferConsumed()){
+		if(context.isBufferConsumed()){ // NOTE:htt, 缓存已读完则清理tmp
 			//清空队列
 			this.tmpHits.clear();
 		}

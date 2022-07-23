@@ -29,7 +29,7 @@ package org.wltea.analyzer.core;
  *
  * 字符集识别工具类
  */
-class CharacterUtil {
+class CharacterUtil { // NOTE:htt, 字符工具
 	
 	public static final int CHAR_USELESS = 0;
 	
@@ -47,7 +47,7 @@ class CharacterUtil {
 	 * @param input
 	 * @return int CharacterUtil定义的字符类型常量
 	 */
-	static int identifyCharType(char input){
+	static int identifyCharType(char input){ // NOTE:htt, 判断字符类型
 		if(input >= '0' && input <= '9'){
 			return CHAR_ARABIC;
 			
@@ -62,7 +62,7 @@ class CharacterUtil {
 					|| ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS  
 					|| ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A){
 				//目前已知的中文字符UTF-8集合
-				return CHAR_CHINESE;
+				return CHAR_CHINESE; // NOTE:htt, 中文
 				
 			}else if(ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS //全角数字字符和日韩字符
 					//韩文字符集
@@ -86,7 +86,7 @@ class CharacterUtil {
 	 * @param input
 	 * @return char
 	 */
-	static char regularize(char input,boolean lowercase){
+	static char regularize(char input,boolean lowercase){ // NOTE:htt, 字符规格化
         if (input == 12288) {
             input = (char) 32;
             

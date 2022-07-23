@@ -30,7 +30,7 @@ import java.util.Arrays;
  * 
  * 英文字符及阿拉伯数字子分词器
  */
-class LetterSegmenter implements ISegmenter {
+class LetterSegmenter implements ISegmenter { // NOTE:htt, 英文字母和数字分词器
 	
 	//子分词器标签
 	static final String SEGMENTER_NAME = "LETTER_SEGMENTER";
@@ -87,17 +87,17 @@ class LetterSegmenter implements ISegmenter {
 	/* (non-Javadoc)
 	 * @see org.wltea.analyzer.core.ISegmenter#analyze(org.wltea.analyzer.core.AnalyzeContext)
 	 */
-	public void analyze(AnalyzeContext context) {
+	public void analyze(AnalyzeContext context) { // NOTE:htt, 分词英文字母和数字分词
 		boolean bufferLockFlag = false;
 		//处理英文字母
-		bufferLockFlag = this.processEnglishLetter(context) || bufferLockFlag;
+		bufferLockFlag = this.processEnglishLetter(context) || bufferLockFlag; // NOTE:htt, 处理英文字母
 		//处理阿拉伯字母
-		bufferLockFlag = this.processArabicLetter(context) || bufferLockFlag;
+		bufferLockFlag = this.processArabicLetter(context) || bufferLockFlag; // NOTE:htt, 处理数字词元
 		//处理混合字母(这个要放最后处理，可以通过QuickSortSet排除重复)
-		bufferLockFlag = this.processMixLetter(context) || bufferLockFlag;
+		bufferLockFlag = this.processMixLetter(context) || bufferLockFlag; // NOTE:htt, 处理字母和数字混合
 		
 		//判断是否锁定缓冲区
-		if(bufferLockFlag){
+		if(bufferLockFlag){ // NOTE:htt, 当前正在处理字母/数字 词元
 			context.lockBuffer(SEGMENTER_NAME);
 		}else{
 			//对缓冲区解锁
@@ -124,7 +124,7 @@ class LetterSegmenter implements ISegmenter {
 	 * @param context
 	 * @return
 	 */
-	private boolean processMixLetter(AnalyzeContext context){
+	private boolean processMixLetter(AnalyzeContext context){ // NOTE:htt, 处理字母和数字混合
 		boolean needLock = false;
 		
 		if(this.start == -1){//当前的分词器尚未开始处理字符
@@ -142,20 +142,20 @@ class LetterSegmenter implements ISegmenter {
 				this.end = context.getCursor();
 				
 			}else if(CharacterUtil.CHAR_USELESS == context.getCurrentCharType()
-						&& this.isLetterConnector(context.getCurrentChar())){
+						&& this.isLetterConnector(context.getCurrentChar())){ // NOTE:htt, 如果是字母连接器则调整end位置
 				//记录下可能的结束位置
 				this.end = context.getCursor();
 			}else{
 				//遇到非Letter字符，输出词元
 				Lexeme newLexeme = new Lexeme(context.getBufferOffset() , this.start , this.end - this.start + 1 , Lexeme.TYPE_LETTER);
-				context.addLexeme(newLexeme);
+				context.addLexeme(newLexeme); // NOTE:htt, 如果遇到不是英文或数字，则将已有英文或数字添加到context
 				this.start = -1;
 				this.end = -1;
 			}			
 		}
 		
 		//判断缓冲区是否已经读完
-		if(context.isBufferConsumed() && (this.start != -1 && this.end != -1)){
+		if(context.isBufferConsumed() && (this.start != -1 && this.end != -1)){ // NOTE:htt, 缓冲区已读完则添加已处理内容到context
             //缓冲以读完，输出词元
             Lexeme newLexeme = new Lexeme(context.getBufferOffset() , this.start , this.end - this.start + 1 , Lexeme.TYPE_LETTER);
             context.addLexeme(newLexeme);
@@ -178,7 +178,7 @@ class LetterSegmenter implements ISegmenter {
 	 * @param context
 	 * @return
 	 */
-	private boolean processEnglishLetter(AnalyzeContext context){
+	private boolean processEnglishLetter(AnalyzeContext context){ // NOTE:htt, 处理英文字母
 		boolean needLock = false;
 		
 		if(this.englishStart == -1){//当前的分词器尚未开始处理英文字符	
@@ -194,14 +194,14 @@ class LetterSegmenter implements ISegmenter {
 			}else{
 				//遇到非English字符,输出词元
 				Lexeme newLexeme = new Lexeme(context.getBufferOffset() , this.englishStart , this.englishEnd - this.englishStart + 1 , Lexeme.TYPE_ENGLISH);
-				context.addLexeme(newLexeme);
+				context.addLexeme(newLexeme); // NOTE:htt, 非英文词元则添加到context，并重新设置英文起始标记
 				this.englishStart = -1;
 				this.englishEnd= -1;
 			}
 		}
 		
 		//判断缓冲区是否已经读完
-		if(context.isBufferConsumed() && (this.englishStart != -1 && this.englishEnd != -1)){
+		if(context.isBufferConsumed() && (this.englishStart != -1 && this.englishEnd != -1)){ // NOTE:htt, 如果缓冲区读完则添加词元
             //缓冲以读完，输出词元
             Lexeme newLexeme = new Lexeme(context.getBufferOffset() , this.englishStart , this.englishEnd - this.englishStart + 1 , Lexeme.TYPE_ENGLISH);
             context.addLexeme(newLexeme);
@@ -224,7 +224,7 @@ class LetterSegmenter implements ISegmenter {
 	 * @param context
 	 * @return
 	 */
-	private boolean processArabicLetter(AnalyzeContext context){
+	private boolean processArabicLetter(AnalyzeContext context){ // NOTE:htt, 处理数字词元
 		boolean needLock = false;
 		
 		if(this.arabicStart == -1){//当前的分词器尚未开始处理数字字符	
@@ -238,19 +238,19 @@ class LetterSegmenter implements ISegmenter {
 				//记录当前指针位置为结束位置
 				this.arabicEnd = context.getCursor();
 			}else if(CharacterUtil.CHAR_USELESS == context.getCurrentCharType()
-					&& this.isNumConnector(context.getCurrentChar())){
+					&& this.isNumConnector(context.getCurrentChar())){ // NOTE:htt, 数字连接符号则不处理
 				//不输出数字，但不标记结束
 			}else{
 				////遇到非Arabic字符,输出词元
 				Lexeme newLexeme = new Lexeme(context.getBufferOffset() , this.arabicStart , this.arabicEnd - this.arabicStart + 1 , Lexeme.TYPE_ARABIC);
-				context.addLexeme(newLexeme);
+				context.addLexeme(newLexeme); // NOTE:htt, 非数字则将已有数字添加到context
 				this.arabicStart = -1;
 				this.arabicEnd = -1;
 			}
 		}
 		
 		//判断缓冲区是否已经读完
-		if(context.isBufferConsumed() && (this.arabicStart != -1 && this.arabicEnd != -1)){
+		if(context.isBufferConsumed() && (this.arabicStart != -1 && this.arabicEnd != -1)){ // NOTE:htt, 缓存区已读完则添加数字到context
             //生成已切分的词元
             Lexeme newLexeme = new Lexeme(context.getBufferOffset() ,  this.arabicStart , this.arabicEnd - this.arabicStart + 1 , Lexeme.TYPE_ARABIC);
             context.addLexeme(newLexeme);
@@ -283,7 +283,7 @@ class LetterSegmenter implements ISegmenter {
 	 * @param input
 	 * @return
 	 */
-	private boolean isNumConnector(char input){
+	private boolean isNumConnector(char input){ // NOTE:htt, 判断是否为数字链接符号
 		int index = Arrays.binarySearch(Num_Connector, input);
 		return index >= 0;
 	}

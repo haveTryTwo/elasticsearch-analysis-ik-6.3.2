@@ -36,14 +36,14 @@ import org.wltea.analyzer.dic.Hit;
  * 
  * 中文数量词子分词器
  */
-class CN_QuantifierSegmenter implements ISegmenter{
+class CN_QuantifierSegmenter implements ISegmenter{ // NOTE:htt, 分析中文量词
 	
 	//子分词器标签
 	static final String SEGMENTER_NAME = "QUAN_SEGMENTER";
 	
 	//中文数词
 	private static String Chn_Num = "一二两三四五六七八九十零壹贰叁肆伍陆柒捌玖拾百千万亿拾佰仟萬億兆卅廿";//Cnum
-	private static Set<Character> ChnNumberChars = new HashSet<Character>();
+	private static Set<Character> ChnNumberChars = new HashSet<Character>(); // NOTE:htt, 保存中文数字
 	static{
 		char[] ca = Chn_Num.toCharArray();
 		for(char nChar : ca){
@@ -76,11 +76,11 @@ class CN_QuantifierSegmenter implements ISegmenter{
 	/**
 	 * 分词
 	 */
-	public void analyze(AnalyzeContext context) {
+	public void analyze(AnalyzeContext context) { // NOTE:htt, 分析中文量词
 		//处理中文数词
-		this.processCNumber(context);
+		this.processCNumber(context); // NOTE:htt, 处理中文数字
 		//处理中文量词
-		this.processCount(context);
+		this.processCount(context); // NOTE:htt, 处理中文量词
 		
 		//判断是否锁定缓冲区
 		if(this.nStart == -1 && this.nEnd == -1	&& countHits.isEmpty()){
@@ -104,7 +104,7 @@ class CN_QuantifierSegmenter implements ISegmenter{
 	/**
 	 * 处理数词
 	 */
-	private void processCNumber(AnalyzeContext context){
+	private void processCNumber(AnalyzeContext context){ // NOTE:htt, 处理中文数字
 		if(nStart == -1 && nEnd == -1){//初始状态
 			if(CharacterUtil.CHAR_CHINESE == context.getCurrentCharType() 
 					&& ChnNumberChars.contains(context.getCurrentChar())){
@@ -119,7 +119,7 @@ class CN_QuantifierSegmenter implements ISegmenter{
 				nEnd = context.getCursor();
 			}else{
 				//输出数词
-				this.outputNumLexeme(context);
+				this.outputNumLexeme(context); // NOTE:htt, 添加中文数字词元到context
 				//重置头尾指针
 				nStart = -1;
 				nEnd = -1;
@@ -127,9 +127,9 @@ class CN_QuantifierSegmenter implements ISegmenter{
 		}
 		
 		//缓冲区已经用完，还有尚未输出的数词
-		if(context.isBufferConsumed() && (nStart != -1 && nEnd != -1)){
+		if(context.isBufferConsumed() && (nStart != -1 && nEnd != -1)){ // NOTE:htt, 缓冲区已经读完则添加中文词元到context
 			//输出数词
-			outputNumLexeme(context);
+			outputNumLexeme(context); // NOTE:htt, 添加中文数字词元到context
 			//重置头尾指针
 			nStart = -1;
 			nEnd = -1;
@@ -140,9 +140,9 @@ class CN_QuantifierSegmenter implements ISegmenter{
 	 * 处理中文量词
 	 * @param context
 	 */
-	private void processCount(AnalyzeContext context){
+	private void processCount(AnalyzeContext context){ // NOTE:htt, 处理中文量词
 		// 判断是否需要启动量词扫描
-		if(!this.needCountScan(context)){
+		if(!this.needCountScan(context)){ // NOTE:htt, 判断是否继续扫描量词
 			return;
 		}
 		
@@ -157,7 +157,7 @@ class CN_QuantifierSegmenter implements ISegmenter{
 					if(hit.isMatch()){
 						//输出当前的词
 						Lexeme newLexeme = new Lexeme(context.getBufferOffset() , hit.getBegin() , context.getCursor() - hit.getBegin() + 1 , Lexeme.TYPE_COUNT);
-						context.addLexeme(newLexeme);
+						context.addLexeme(newLexeme); // NOTE:htt, 如果是量词则添加到context
 						
 						if(!hit.isPrefix()){//不是词前缀，hit不需要继续匹配，移除
 							this.countHits.remove(hit);
@@ -176,19 +176,17 @@ class CN_QuantifierSegmenter implements ISegmenter{
 			if(singleCharHit.isMatch()){//首字成量词词
 				//输出当前的词
 				Lexeme newLexeme = new Lexeme(context.getBufferOffset() , context.getCursor() , 1 , Lexeme.TYPE_COUNT);
-				context.addLexeme(newLexeme);
+				context.addLexeme(newLexeme); // NOTE:htt, 如果是量词则添加到context
 
 				//同时也是词前缀
-				if(singleCharHit.isPrefix()){
+				if(singleCharHit.isPrefix()){ // NOTE:htt, 如果是词前缀则加入hit列表继续判断
 					//前缀匹配则放入hit列表
 					this.countHits.add(singleCharHit);
 				}
 			}else if(singleCharHit.isPrefix()){//首字为量词前缀
 				//前缀匹配则放入hit列表
-				this.countHits.add(singleCharHit);
+				this.countHits.add(singleCharHit);// NOTE:htt, 如果是词前缀则加入hit列表继续判断
 			}
-			
-			
 		}else{
 			//输入的不是中文字符
 			//清空未成形的量词
@@ -196,7 +194,7 @@ class CN_QuantifierSegmenter implements ISegmenter{
 		}
 		
 		//缓冲区数据已经读完，还有尚未输出的量词
-		if(context.isBufferConsumed()){
+		if(context.isBufferConsumed()){ // NOTE:htt, 如果缓冲区已读完，清理hits
 			//清空未成形的量词
 			this.countHits.clear();
 		}
@@ -206,13 +204,13 @@ class CN_QuantifierSegmenter implements ISegmenter{
 	 * 判断是否需要扫描量词
 	 * @return
 	 */
-	private boolean needCountScan(AnalyzeContext context){
+	private boolean needCountScan(AnalyzeContext context){ // NOTE:htt, 判断是否继续扫描量词
 		if((nStart != -1 && nEnd != -1 ) || !countHits.isEmpty()){
 			//正在处理中文数词,或者正在处理量词
 			return true;
 		}else{
 			//找到一个相邻的数词
-			if(!context.getOrgLexemes().isEmpty()){
+			if(!context.getOrgLexemes().isEmpty()){ // NOTE:htt, 如何和数字相邻则继续扫描量词
 				Lexeme l = context.getOrgLexemes().peekLast();
 				if((Lexeme.TYPE_CNUM == l.getLexemeType() ||  Lexeme.TYPE_ARABIC == l.getLexemeType())
 					&& (l.getBegin() + l.getLength() == context.getCursor())){
@@ -227,11 +225,11 @@ class CN_QuantifierSegmenter implements ISegmenter{
 	 * 添加数词词元到结果集
 	 * @param context
 	 */
-	private void outputNumLexeme(AnalyzeContext context){
+	private void outputNumLexeme(AnalyzeContext context){ // NOTE:htt, 添加中文数字词元到context
 		if(nStart > -1 && nEnd > -1){
 			//输出数词
 			Lexeme newLexeme = new Lexeme(context.getBufferOffset() , nStart , nEnd - nStart + 1 , Lexeme.TYPE_CNUM);
-			context.addLexeme(newLexeme);
+			context.addLexeme(newLexeme); // NOTE:htt, 添加中文数字
 			
 		}
 	}

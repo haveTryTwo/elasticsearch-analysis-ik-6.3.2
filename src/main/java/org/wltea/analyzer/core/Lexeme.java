@@ -27,7 +27,7 @@ package org.wltea.analyzer.core;
 /**
  * IK词元对象 
  */
-public class Lexeme implements Comparable<Lexeme>{
+public class Lexeme implements Comparable<Lexeme>{ // NOTE:htt, ik词元，包括{offset, begin, length, type}
 	//lexemeType常量
 	//未知
 	public static final int TYPE_UNKNOWN = 0;
@@ -51,13 +51,13 @@ public class Lexeme implements Comparable<Lexeme>{
 	public static final int TYPE_CQUAN = 48;
 	
 	//词元的起始位移
-	private int offset;
+	private int offset; // NOTE:htt, 累积当前的segmentbuff相对于reader起始的累积位置
     //词元的相对起始位置
-    private int begin;
+    private int begin; // NOTE:htt, 本次segmentBuff中相对于起始的位置
     //词元的长度
-    private int length;
+    private int length; // NOTE:htt, 分词长度
     //词元文本
-    private String lexemeText;
+    private String lexemeText; // NOTE:htt, 词元文本内容
     //词元类型
     private int lexemeType;
     
@@ -114,7 +114,7 @@ public class Lexeme implements Comparable<Lexeme>{
      * 词元在排序集合中的比较算法
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-	public int compareTo(Lexeme other) {
+	public int compareTo(Lexeme other) { // NOTE:htt, 考虑 {begin, length}的判断
 		//起始位置优先
         if(this.begin < other.getBegin()){
             return -1;
@@ -148,7 +148,7 @@ public class Lexeme implements Comparable<Lexeme>{
 	 * 获取词元在文本中的起始位置
 	 * @return int
 	 */
-	public int getBeginPosition(){
+	public int getBeginPosition(){ // NOTE:htt, 相对于reader整体的起始位置
 		return offset + begin;
 	}
 
@@ -160,7 +160,7 @@ public class Lexeme implements Comparable<Lexeme>{
 	 * 获取词元在文本中的结束位置
 	 * @return int
 	 */
-	public int getEndPosition(){
+	public int getEndPosition(){ // NOTE:htt, 相对于reader整体的结束位置
 		return offset + begin + length;
 	}
 	
@@ -212,7 +212,7 @@ public class Lexeme implements Comparable<Lexeme>{
 	 * 获取词元类型标示字符串
 	 * @return String
 	 */
-	public String getLexemeTypeString(){
+	public String getLexemeTypeString(){ // NOTE:htt, 词元类型
 		switch(lexemeType) {
 
 		case TYPE_ENGLISH :
@@ -258,9 +258,9 @@ public class Lexeme implements Comparable<Lexeme>{
 	 * @param lexemeType
 	 * @return boolean 词元是否成功合并
 	 */
-	public boolean append(Lexeme l , int lexemeType){
-		if(l != null && this.getEndPosition() == l.getBeginPosition()){
-			this.length += l.getLength();
+	public boolean append(Lexeme l , int lexemeType){ // NOTE:htt, 合并词元
+		if(l != null && this.getEndPosition() == l.getBeginPosition()){ // NOTE;htt, 如果词元相近则进行合并
+			this.length += l.getLength(); // NOTE:htt, 增加长度
 			this.lexemeType = lexemeType;
 			return true;
 		}else {

@@ -28,14 +28,14 @@ package org.wltea.analyzer.core;
 /**
  * Lexeme链（路径）
  */
-class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
+class LexemePath extends QuickSortSet implements Comparable<LexemePath>{ // NOTE:htt, 词元链路
 	
 	//起始位置
 	private int pathBegin;
 	//结束
 	private int pathEnd;
 	//词元链的有效字符长度
-	private int payloadLength;
+	private int payloadLength; // NOTE:htt, 词元链有效长度，多个词元，会将长度相加
 	
 	LexemePath(){
 		this.pathBegin = -1;
@@ -48,7 +48,7 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 	 * @param lexeme
 	 * @return 
 	 */
-	boolean addCrossLexeme(Lexeme lexeme){
+	boolean addCrossLexeme(Lexeme lexeme){ // NOTE:htt, 根据词元交叉的位置，调整 pathEnd以及payloadLength
 		if(this.isEmpty()){
 			this.addLexeme(lexeme);
 			this.pathBegin = lexeme.getBegin();
@@ -56,10 +56,10 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 			this.payloadLength += lexeme.getLength();
 			return true;
 			
-		}else if(this.checkCross(lexeme)){
+		}else if(this.checkCross(lexeme)){ // NOTE:htt, 词元位置是否有交叉
 			this.addLexeme(lexeme);
 			if(lexeme.getBegin() + lexeme.getLength() > this.pathEnd){
-				this.pathEnd = lexeme.getBegin() + lexeme.getLength();
+				this.pathEnd = lexeme.getBegin() + lexeme.getLength(); // NOTE:htt, 调长pathEnd的位置
 			}
 			this.payloadLength = this.pathEnd - this.pathBegin;
 			return true;
@@ -75,7 +75,7 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 	 * @param lexeme
 	 * @return 
 	 */
-	boolean addNotCrossLexeme(Lexeme lexeme){
+	boolean addNotCrossLexeme(Lexeme lexeme){ // NOTE:htt, 添加不相交词元
 		if(this.isEmpty()){
 			this.addLexeme(lexeme);
 			this.pathBegin = lexeme.getBegin();
@@ -89,7 +89,7 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 		}else{
 			this.addLexeme(lexeme);
 			this.payloadLength += lexeme.getLength();
-			Lexeme head = this.peekFirst();
+			Lexeme head = this.peekFirst(); // NOTE:htt, 取首个词元，以便调整 pathEnd,pathEnd
 			this.pathBegin = head.getBegin();
 			Lexeme tail = this.peekLast();
 			this.pathEnd = tail.getBegin() + tail.getLength();
@@ -102,7 +102,7 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 	 * 移除尾部的Lexeme
 	 * @return
 	 */
-	Lexeme removeTail(){
+	Lexeme removeTail(){ // NOTE:htt, 尾部移除词元
 		Lexeme tail = this.pollLast();
 		if(this.isEmpty()){
 			this.pathBegin = -1;
@@ -121,7 +121,7 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 	 * @param lexeme
 	 * @return
 	 */
-	boolean checkCross(Lexeme lexeme){
+	boolean checkCross(Lexeme lexeme){ // NOTE:htt, 词元位置是否有交叉
 		return (lexeme.getBegin() >= this.pathBegin && lexeme.getBegin() < this.pathEnd)
 				|| (this.pathBegin >= lexeme.getBegin() && this.pathBegin < lexeme.getBegin()+ lexeme.getLength());
 	}
@@ -155,11 +155,11 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 	 * X权重（词元长度积）
 	 * @return
 	 */
-	int getXWeight(){
+	int getXWeight(){ // NOTE:htt, 获取词元X权重
 		int product = 1;
 		Cell c = this.getHead();
 		while( c != null && c.getLexeme() != null){
-			product *= c.getLexeme().getLength();
+			product *= c.getLexeme().getLength(); // NOTE:htt, 长度相乘
 			c = c.getNext();
 		}
 		return product;
@@ -169,7 +169,7 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 	 * 词元位置权重
 	 * @return
 	 */
-	int getPWeight(){
+	int getPWeight(){ // NOTE:htt, 词元位置权重
 		int pWeight = 0;
 		int p = 0;
 		Cell c = this.getHead();
@@ -181,7 +181,7 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 		return pWeight;		
 	}
 	
-	LexemePath copy(){
+	LexemePath copy(){ // NOTE:htt, 词元链表复制
 		LexemePath theCopy = new LexemePath();
 		theCopy.pathBegin = this.pathBegin;
 		theCopy.pathEnd = this.pathEnd;
@@ -194,9 +194,9 @@ class LexemePath extends QuickSortSet implements Comparable<LexemePath>{
 		return theCopy;
 	}
 
-	public int compareTo(LexemePath o) {
+	public int compareTo(LexemePath o) { // NOTE:htt, 词元路肩比较
 		//比较有效文本长度
-		if(this.payloadLength > o.payloadLength){
+		if(this.payloadLength > o.payloadLength){ // NOTE:htt, 词元长度越长越好
 			return -1;
 		}else if(this.payloadLength < o.payloadLength){
 			return 1;

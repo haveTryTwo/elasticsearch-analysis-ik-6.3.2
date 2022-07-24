@@ -44,10 +44,10 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
  * IK分词器 Lucene Tokenizer适配器类
  * 兼容Lucene 4.0版本
  */
-public final class IKTokenizer extends Tokenizer {
+public final class IKTokenizer extends Tokenizer { // NOTE:htt, ik 分词器
 	
 	//IK分词器实现
-	private IKSegmenter _IKImplement;
+	private IKSegmenter _IKImplement; // NOTE:htt, ik分词器主类
 	
 	//词元文本属性
 	private final CharTermAttribute termAtt;
@@ -56,9 +56,9 @@ public final class IKTokenizer extends Tokenizer {
 	//词元分类属性（该属性分类参考org.wltea.analyzer.core.Lexeme中的分类常量）
 	private final TypeAttribute typeAtt;
 	//记录最后一个词元的结束位置
-	private int endPosition;
+	private int endPosition; // NOTE:htt, 记录最后一个词元在整个数据中的结束位置
 
-   	private int skippedPositions;
+   	private int skippedPositions; // TODO:htt, check
 
    	private PositionIncrementAttribute posIncrAtt;
 
@@ -73,29 +73,29 @@ public final class IKTokenizer extends Tokenizer {
 	    typeAtt = addAttribute(TypeAttribute.class);
         posIncrAtt = addAttribute(PositionIncrementAttribute.class);
 
-        _IKImplement = new IKSegmenter(input,configuration);
+        _IKImplement = new IKSegmenter(input,configuration); // NOTE:htt, ik分词器主类
 	}
 
 	/* (non-Javadoc)
 	 * @see org.apache.lucene.analysis.TokenStream#incrementToken()
 	 */
 	@Override
-	public boolean incrementToken() throws IOException {
+	public boolean incrementToken() throws IOException { // NOTE:htt, 增加token，从输入数据中获取下一个分词
 		//清除所有的词元属性
 		clearAttributes();
         skippedPositions = 0;
 
-        Lexeme nextLexeme = _IKImplement.next();
+        Lexeme nextLexeme = _IKImplement.next(); // NOTE:htt, 获取下一个result词元，如果启动smart则会组合，如果为停用词则继续查找
 		if(nextLexeme != null){
             posIncrAtt.setPositionIncrement(skippedPositions +1 );
 
 			//将Lexeme转成Attributes
 			//设置词元文本
-			termAtt.append(nextLexeme.getLexemeText());
+			termAtt.append(nextLexeme.getLexemeText()); // NOTE:htt, 添加分词
 			//设置词元长度
-			termAtt.setLength(nextLexeme.getLength());
+			termAtt.setLength(nextLexeme.getLength()); // NOTE:htt, 词元长度
 			//设置词元位移
-            offsetAtt.setOffset(correctOffset(nextLexeme.getBeginPosition()), correctOffset(nextLexeme.getEndPosition()));
+            offsetAtt.setOffset(correctOffset(nextLexeme.getBeginPosition()), correctOffset(nextLexeme.getEndPosition())); // NOTE:htt, 词元位移属性
 
             //记录分词的最后位置
 			endPosition = nextLexeme.getEndPosition();

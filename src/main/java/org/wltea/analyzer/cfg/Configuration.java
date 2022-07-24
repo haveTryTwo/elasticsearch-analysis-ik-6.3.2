@@ -13,7 +13,7 @@ import org.wltea.analyzer.dic.Dictionary;
 import java.io.File;
 import java.nio.file.Path;
 
-public class Configuration {
+public class Configuration { // NOTE:htt, ik配置，包括是否启用smart机制
 
 	private Environment environment;
 	private Settings settings;
@@ -28,7 +28,7 @@ public class Configuration {
 	private boolean enableLowercase=true;
 
 	//是否开启自动检查词库变更
-	private boolean enableAutoCheckDict = true;
+	private boolean enableAutoCheckDict = true; // NOTE:htt, 默认为true
 
 	@Inject
 	public Configuration(Environment env,Settings settings) {
@@ -40,11 +40,11 @@ public class Configuration {
 		this.enableRemoteDict = settings.get("enable_remote_dict", "true").equals("true");
 		this.enableAutoCheckDict = settings.get("enable_autocheck_dict", "true").equals("true");
 
-		Dictionary.initial(this);
+		Dictionary.initial(this);  // NOTE:htt, 初始化词库，包括本次词库，远程词库
 
 	}
 
-	public Path getConfigInPluginDir() {
+	public Path getConfigInPluginDir() { // NOTE:htt, 获取ik配置目录
 		return PathUtils
 				.get(new File(AnalysisIkPlugin.class.getProtectionDomain().getCodeSource().getLocation().getPath())
 						.getParent(), "config")

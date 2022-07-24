@@ -32,7 +32,7 @@ import org.wltea.analyzer.cfg.Configuration;
  * IK分词器，Lucene Analyzer接口实现
  * 兼容Lucene 4.0版本
  */
-public final class IKAnalyzer extends Analyzer{
+public final class IKAnalyzer extends Analyzer{ // NOTE:htt, ik分析器
 	
 	private Configuration configuration;
 
@@ -60,7 +60,7 @@ public final class IKAnalyzer extends Analyzer{
 	 */
 	@Override
 	protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer _IKTokenizer = new IKTokenizer(configuration);
+        Tokenizer _IKTokenizer = new IKTokenizer(configuration); // NOTE:htt, ik 分词器
 		return new TokenStreamComponents(_IKTokenizer);
     }
 

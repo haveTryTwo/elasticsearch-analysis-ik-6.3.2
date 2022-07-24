@@ -119,7 +119,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 		Properties tmpProps = new Properties();
 		InputStream input = null;
 		try {
-			logger.info("try load config from {}", configFile);
+			logger.info("try load config from {}", configFile); // NOTE:htt, 只有在涉及到分析器时才会加载；如果没有移动索引则不会加载；
 			input = new FileInputStream(configFile.toFile());
 		} catch (FileNotFoundException e) {
 			conf_dir = configuration.getConfigInPluginDir(); // NOTE:htt, 如果原有路径没有找到，再查找 ${ik_path}/config 路径

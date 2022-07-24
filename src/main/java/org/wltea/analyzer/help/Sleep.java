@@ -2,7 +2,7 @@ package org.wltea.analyzer.help;
 
 import org.apache.logging.log4j.Logger;
 
-public class Sleep {
+public class Sleep { // NOTE:htt, sleep函数
 
     private static final Logger logger = ESPluginLoggerFactory.getLogger(Sleep.class.getName());
 

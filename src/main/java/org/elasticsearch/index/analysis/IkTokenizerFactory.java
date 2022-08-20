@@ -7,7 +7,7 @@ import org.elasticsearch.index.IndexSettings;
 import org.wltea.analyzer.cfg.Configuration;
 import org.wltea.analyzer.lucene.IKTokenizer;
 
-public class IkTokenizerFactory extends AbstractTokenizerFactory {
+public class IkTokenizerFactory extends AbstractTokenizerFactory { // NOTE:htt, ik 分词器 创建工厂
   private Configuration configuration;
 
   public IkTokenizerFactory(IndexSettings indexSettings, Environment env, String name, Settings settings) {
@@ -29,6 +29,7 @@ public class IkTokenizerFactory extends AbstractTokenizerFactory {
   }
 
   @Override
-  public Tokenizer create() {
-      return new IKTokenizer(configuration);  }
+  public Tokenizer create() { // NOTE:htt, ik 分词器
+      return new IKTokenizer(configuration);
+  }
 }

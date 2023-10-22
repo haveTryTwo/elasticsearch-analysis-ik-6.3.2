@@ -71,11 +71,11 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	 */
 	private static Dictionary singleton;
 
-	private DictSegment _MainDict; // NOTE:htt, 主词典， TODO 推荐使用 volatile，当重新赋值后，其他的线程可以立即看到
+	private DictSegment mainDict; // NOTE:htt, 主词典， TODO 推荐使用 volatile，当重新赋值后，其他的线程可以立即看到
 
-	private DictSegment _QuantifierDict; // NOTE:htt, 量词词典
+	private DictSegment quantifierDict; // NOTE:htt, 量词词典
 
-	private DictSegment _StopWords; // NOTE:htt, 停用词词典
+	private DictSegment stopWords; // NOTE:htt, 停用词词典
 
 	/**
 	 * 配置对象
@@ -103,18 +103,18 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	private static FileTime extDictLastModifiedTime;
 	private static FileTime extDictConfigLastModifiedTime;
 
-	private Path conf_dir; // NOTE:htt, 对应路径为 ${es_conf}/analysis-ik 或 ${ik_path}/config
+	private Path confDir; // NOTE:htt, 对应路径为 ${es_conf}/analysis-ik 或 ${ik_path}/config
 	private Properties props;
 
 	private Dictionary(Configuration cfg) { // NOTE:htt, 加载 ${real_ik_conf}/IKAnalyzer.cfg.xml 文件，以便获取 ext 词典等信息
 		this.configuration = cfg;
 		this.props = new Properties();
-		this.conf_dir = cfg.getEnvironment().configFile().resolve(AnalysisIkPlugin.PLUGIN_NAME); // NOTE:htt, 默认先找 ${es_conf}/analysis-ik 作为配置路径
+		this.confDir = cfg.getEnvironment().configFile().resolve(AnalysisIkPlugin.PLUGIN_NAME); // NOTE:htt, 默认先找 ${es_conf}/analysis-ik 作为配置路径
 		this.props = loadProperties();
 	}
 
 	private Properties loadProperties() {
-		Path configFile = conf_dir.resolve(FILE_NAME);
+		Path configFile = confDir.resolve(FILE_NAME);
 
 		Properties tmpProps = new Properties();
 		InputStream input = null;
@@ -122,8 +122,8 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 			logger.info("try load config from {}", configFile); // NOTE:htt, 只有在涉及到分析器时才会加载；如果没有移动索引则不会加载；
 			input = new FileInputStream(configFile.toFile());
 		} catch (FileNotFoundException e) {
-			conf_dir = configuration.getConfigInPluginDir(); // NOTE:htt, 如果原有路径没有找到，再查找 ${ik_path}/config 路径
-			configFile = conf_dir.resolve(FILE_NAME); // NOTE:htt, 加载 ${real_ik_conf}/IKAnalyzer.cfg.xml 文件
+			confDir = configuration.getConfigInPluginDir(); // NOTE:htt, 如果原有路径没有找到，再查找 ${ik_path}/config 路径
+			configFile = confDir.resolve(FILE_NAME); // NOTE:htt, 加载 ${real_ik_conf}/IKAnalyzer.cfg.xml 文件
 			try {
 				logger.info("try load config from {}", configFile);
 				input = new FileInputStream(configFile.toFile());
@@ -309,7 +309,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	}
 
 	private String getDictRoot() {
-		return conf_dir.toAbsolutePath().toString();
+		return confDir.toAbsolutePath().toString();
 	}
 
 
@@ -337,7 +337,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 			for (String word : words) {
 				if (word != null) {
 					// 批量加载词条到主内存词典中
-					singleton._MainDict.fillSegment(word.trim().toCharArray());
+					singleton.mainDict.fillSegment(word.trim().toCharArray());
 				}
 			}
 		}
@@ -351,7 +351,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 			for (String word : words) {
 				if (word != null) {
 					// 批量屏蔽词条
-					singleton._MainDict.disableSegment(word.trim().toCharArray()); // NOTE:htt, 批量取消词典
+					singleton.mainDict.disableSegment(word.trim().toCharArray()); // NOTE:htt, 批量取消词典
 				}
 			}
 		}
@@ -363,7 +363,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	 * @return Hit 匹配结果描述
 	 */
 	public Hit matchInMainDict(char[] charArray) { // NOTE:htt, 判断是否在主词典中
-		return singleton._MainDict.match(charArray);
+		return singleton.mainDict.match(charArray);
 	}
 
 	/**
@@ -372,7 +372,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	 * @return Hit 匹配结果描述
 	 */
 	public Hit matchInMainDict(char[] charArray, int begin, int length) { // NOTE:htt, 判断是否在主词典中
-		return singleton._MainDict.match(charArray, begin, length);
+		return singleton.mainDict.match(charArray, begin, length);
 	}
 
 	/**
@@ -381,7 +381,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	 * @return Hit 匹配结果描述
 	 */
 	public Hit matchInQuantifierDict(char[] charArray, int begin, int length) { // NOTE:htt, 判断是否为两次
-		return singleton._QuantifierDict.match(charArray, begin, length);
+		return singleton.quantifierDict.match(charArray, begin, length);
 	}
 
 	/**
@@ -400,7 +400,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	 * @return boolean
 	 */
 	public boolean isStopWord(char[] charArray, int begin, int length) { // NOTE:htt, 判断是否为停用词
-		return singleton._StopWords.match(charArray, begin, length).isMatch();
+		return singleton.stopWords.match(charArray, begin, length).isMatch();
 	}
 
 	/**
@@ -408,11 +408,11 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	 */
 	private void loadMainDict() { // NOTE:htt, 从main.dic、用户扩展词库以及 远程词库中加载 分词
 		// 建立一个主词典实例
-		_MainDict = new DictSegment((char) 0); // NOTE:htt, main dictionary的根节点
+		mainDict = new DictSegment((char) 0); // NOTE:htt, main dictionary的根节点
 
 		// 读取主词典文件
 		Path file = PathUtils.get(getDictRoot(), Dictionary.PATH_DIC_MAIN); // NOTE:htt, 加载 ${real_ik_conf}/main.dic 主词典
-		loadDictFile(_MainDict, file, false, "Main Dict"); // NOTE:htt, 从main.dic文件加载内容构建词典
+		loadDictFile(mainDict, file, false, "Main Dict"); // NOTE:htt, 从main.dic文件加载内容构建词典
 		// 加载扩展词典
 		this.loadExtDict(); // NOTE:htt, 加载用户配置的扩展词库
 		// 加载远程自定义词库
@@ -430,7 +430,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 				// 读取扩展词典文件
 				logger.info("[Dict Loading] " + extDictName);
 				Path file = PathUtils.get(extDictName);
-				loadDictFile(_MainDict, file, false, "Extra Dict");  // NOTE:htt, 从ext文件加载内容构建词典
+				loadDictFile(mainDict, file, false, "Extra Dict");  // NOTE:htt, 从ext文件加载内容构建词典
 			}
 		}
 	}
@@ -452,7 +452,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 				if (theWord != null && !"".equals(theWord.trim())) {
 					// 加载扩展词典数据到主内存词典中
 					logger.info(theWord);
-					_MainDict.fillSegment(theWord.trim().toLowerCase().toCharArray()); // NOTE:htt, 从远程连接加载内容构建词典
+					mainDict.fillSegment(theWord.trim().toLowerCase().toCharArray()); // NOTE:htt, 从远程连接加载内容构建词典
 				}
 			}
 		}
@@ -519,11 +519,11 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	 */
 	private void loadStopWordDict() { // NOTE:htt, 加载停用词
 		// 建立主词典实例
-		_StopWords = new DictSegment((char) 0);
+		stopWords = new DictSegment((char) 0);
 
 		// 读取主词典文件
 		Path file = PathUtils.get(getDictRoot(), Dictionary.PATH_DIC_STOP);
-		loadDictFile(_StopWords, file, false, "Main Stopwords"); // NOTE:htt, 加载停用词
+		loadDictFile(stopWords, file, false, "Main Stopwords"); // NOTE:htt, 加载停用词
 
 		// 加载扩展停止词典
 		List<String> extStopWordDictFiles = getExtStopWordDictionarys(); // NOTE:htt, 获取拓展停用词 文件列表
@@ -533,7 +533,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 
 				// 读取扩展词典文件
 				file = PathUtils.get(extStopWordDictName);
-				loadDictFile(_StopWords, file, false, "Extra Stopwords"); // NOTE:htt, 加载拓展停用词
+				loadDictFile(stopWords, file, false, "Extra Stopwords"); // NOTE:htt, 加载拓展停用词
 			}
 		}
 
@@ -551,7 +551,7 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 				if (theWord != null && !"".equals(theWord.trim())) {
 					// 加载远程词典数据到主内存中
 					logger.info(theWord);
-					_StopWords.fillSegment(theWord.trim().toLowerCase().toCharArray());
+					stopWords.fillSegment(theWord.trim().toLowerCase().toCharArray());
 				}
 			}
 		}
@@ -563,10 +563,10 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 	 */
 	private void loadQuantifierDict() { // NOTE:htt, 加载量词词典
 		// 建立一个量词典实例
-		_QuantifierDict = new DictSegment((char) 0);
+		quantifierDict = new DictSegment((char) 0);
 		// 读取量词词典文件
 		Path file = PathUtils.get(getDictRoot(), Dictionary.PATH_DIC_QUANTIFIER);
-		loadDictFile(_QuantifierDict, file, false, "Quantifier"); // NOTE:htt, 加载量词 词典
+		loadDictFile(quantifierDict, file, false, "Quantifier"); // NOTE:htt, 加载量词 词典
 	}
 
 	private void loadSurnameDict() { // NOTE:htt, 加载姓氏，但是加载后没有使用 TODO:
@@ -594,15 +594,15 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 		tmpDict.configuration = getSingleton().configuration;
 		tmpDict.loadMainDict(); // NOTE:htt, 从main.dic、用户扩展词库以及 远程词库中加载 分词
 		tmpDict.loadStopWordDict(); // NOTE:htt, 加载停用词
-		_MainDict = tmpDict._MainDict; // NOTE:htt, 更换主词库
-		_StopWords = tmpDict._StopWords; // NOTE:htt, 更换停用词
+		mainDict = tmpDict.mainDict; // NOTE:htt, 更换主词库
+		stopWords = tmpDict.stopWords; // NOTE:htt, 更换停用词
 		logger.info("重新加载词典完毕...");
 	}
 
 
 	public void checkExtDict() { // NOTE:htt, 检查本地 ext-dict 目录时间以及IKAnalyzer.cfg.xml内容是否有变化，如果有变化则重新加载词库
 		try {
-			Path extDictPath = conf_dir.resolve(EXT_DICT_FOLDER);
+			Path extDictPath = confDir.resolve(EXT_DICT_FOLDER);
 			if (!Files.exists(extDictPath, LinkOption.NOFOLLOW_LINKS)) {
 				return;
 			}
@@ -610,13 +610,13 @@ public class Dictionary { // NOTE:htt, 词典管理，加载主词库，ext词�
 			FileTime extDictCurTime = Files.getLastModifiedTime(extDictPath, LinkOption.NOFOLLOW_LINKS);
 			if (!extDictCurTime.equals(extDictLastModifiedTime)) {
 				extDictLastModifiedTime = extDictCurTime;
-				extDictConfigLastModifiedTime = Files.getLastModifiedTime(conf_dir.resolve(FILE_NAME), LinkOption.NOFOLLOW_LINKS);
+				extDictConfigLastModifiedTime = Files.getLastModifiedTime(confDir.resolve(FILE_NAME), LinkOption.NOFOLLOW_LINKS);
 				logger.info("dict file changed, reload.");
 				this.reLoadMainDict();
 				return;
 			}
 
-			FileTime extDictConfigCurTime = Files.getLastModifiedTime(conf_dir.resolve(FILE_NAME), LinkOption.NOFOLLOW_LINKS);
+			FileTime extDictConfigCurTime = Files.getLastModifiedTime(confDir.resolve(FILE_NAME), LinkOption.NOFOLLOW_LINKS);
 			if (!extDictConfigCurTime.equals(extDictConfigLastModifiedTime)) {
 				extDictConfigLastModifiedTime = extDictConfigCurTime;
 				Properties props = this.loadProperties();
